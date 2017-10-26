@@ -219,8 +219,8 @@ class WC_Integration_Brandbassador_Integration extends WC_Integration {
      */
     // Return number order (url GET) ********** [-_-] **********
     function order_number_url () {
-        $url_page_cupon = explode("/", $_SERVER['REQUEST_URI']);
-        return $url_page_cupon[3];
+        global $wp;
+        return $wp->query_vars['order-received'];
     }
 
 
