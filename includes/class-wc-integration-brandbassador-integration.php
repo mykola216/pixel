@@ -392,6 +392,7 @@ if ( ! class_exists( 'WC_Integration_Brandbassador_Integration' ) ) :
         </script>
         <?php
     }
+
     /**
      * Cupon
      * @see page
@@ -574,8 +575,11 @@ if ( ! class_exists( 'WC_Integration_Brandbassador_Integration' ) ) :
                                 exit();
                             }
                         }
-                        //$amount = 10; // Количество
-                        //$discount_type = 'fixed_cart'; // Тип: fixed_cart, percent, fixed_product, percent_product
+
+                        $plaginis = false;
+                        if ( is_plugin_active( 'woocommerce-product-price-based-on-countries22/woocommerce-product-price-based-on-countries.php' ) ) {
+                            $plaginis = true;
+                        }
 
                         $coupon = array (
                             'post_title' => $coupon_code,
@@ -598,9 +602,10 @@ if ( ! class_exists( 'WC_Integration_Brandbassador_Integration' ) ) :
                         update_post_meta ($new_coupon_id, 'apply_before_tax', 'yes');
                         update_post_meta ($new_coupon_id, 'free_shipping', 'no');
                         update_post_meta ($new_coupon_id, 'coupon_authorkey', $auth_key);
-
+                        if ($plaginis){
+                            update_post_meta ($new_coupon_id, 'zone_pricing_type', 'exchange_rate');
+                        }
                     }
-
                     add_cupon_get ($codeb, $descriptionb, $amountb, $percentb, $totimeb, $days_activeb, $auth, $u_limit, $expire, $percentage, $auth_key);
 
                     echo  '{"status": "success"}';
