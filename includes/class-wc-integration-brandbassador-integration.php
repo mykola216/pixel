@@ -392,6 +392,30 @@ if ( ! class_exists( 'WC_Integration_Brandbassador_Integration' ) ) :
         </script>
         <?php
     }
+   /*plagin_checkbox_all*/
+    function plagin_checkbox_all()
+    {
+        $coupons = get_posts( array(
+            'posts_per_page'   => -1,
+            'post_type'        => 'shop_coupon',
+            'post_status'      => 'publish',
+        ) );
+        $plaginis = false;
+        if (is_plugin_active('woocommerce-product-price-based-on-countries/woocommerce-product-price-based-on-countries.php')) {
+            $plaginis = true;
+        }
+        if ($plaginis) {
+            foreach ($coupons as $coupon) {
+                if (!($coupon->coupon_authorkey == '')) {
+                    if ($coupon->discount_type == 'fixed_cart') {
+                        update_post_meta($coupon->ID, 'zone_pricing_type', 'exchange_rate');
+                    }
+                }
+            }
+        }
+    }
+
+    add_action( 'woocommerce_coupon_options_save', 'plagin_checkbox_all');
 
     /**
      * Cupon
@@ -577,8 +601,10 @@ if ( ! class_exists( 'WC_Integration_Brandbassador_Integration' ) ) :
                         }
 
                         $plaginis = false;
-                        if ( is_plugin_active( 'woocommerce-product-price-based-on-countries22/woocommerce-product-price-based-on-countries.php' ) ) {
-                            $plaginis = true;
+                        if ( is_plugin_active( 'woocommerce-product-price-based-on-countries/woocommerce-product-price-based-on-countries.php' ) ) {
+                            if ($discount_type == 'fixed_cart') {
+                                $plaginis = true;
+                            }
                         }
 
                         $coupon = array (
@@ -591,7 +617,7 @@ if ( ! class_exists( 'WC_Integration_Brandbassador_Integration' ) ) :
                         );
 
                         $new_coupon_id = wp_insert_post ($coupon);
-                        // Добавить мета
+                        // add meta
                         update_post_meta ($new_coupon_id, 'discount_type', $discount_type);
                         update_post_meta ($new_coupon_id, 'coupon_amount', $amountb);
                         update_post_meta ($new_coupon_id, 'individual_use', 'no');
