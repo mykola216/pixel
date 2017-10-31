@@ -207,12 +207,6 @@ if ( ! class_exists( 'WC_Integration_Brandbassador_Integration' ) ) :
         global $wp;
         return $wp->query_vars['order-received'];
     }
-
-
-    // Page ORDER ********** [-_-] **********
-    $url_page_cupon = explode("/", $_SERVER['REQUEST_URI']);
-    if (count($url_page_cupon) > 3) {
-        if (isset($url_page_cupon) and $url_page_cupon[2] == 'order-received') {
             /**
              * Extracting field data, writing in variables
              * @see fields
@@ -222,35 +216,8 @@ if ( ! class_exists( 'WC_Integration_Brandbassador_Integration' ) ) :
             $fields_api_key_Checking = $WC_Integration_Brandbassador_Integration->{'fields_api_key_Checking'}(); // api_key
             $fields_api_key_back_Checking = $WC_Integration_Brandbassador_Integration->{'fields_api_key_back_Checking'}(); // api_key_back
 
-
-            // Base url ********** [-_-] **********
-            function brandbassador_url()
-            {
-                $get_site_url = '';
-                if (get_site_url()) {
-                    $get_site_url = get_site_url();
-                }
-                return $get_site_url;
-            }
-
-            // Brandbassador_url ********** [-_-] **********
-            function brandbassador_brandbassador_url()
-            {
-                $brandbassador_brandbassador_url = 'https://api.brandbassador.com';
-                return $brandbassador_brandbassador_url;
-            }
-
-            function fields_api_key_back_Checking()
-            {
-                $WC_Integration_Brandbassador_Integration = new WC_Integration_Brandbassador_Integration;
-                $fields_api_key_back_Checking = $WC_Integration_Brandbassador_Integration->{'fields_api_key_back_Checking'}(); // api_key_back
-                return $fields_api_key_back_Checking;
-            }
-
-
             function isa_order_received_text()
             {
-
                 $WC_Integration_Brandbassador_Integration = new WC_Integration_Brandbassador_Integration;
                 function brandbassador_url_referal()
                 {
@@ -267,19 +234,45 @@ if ( ! class_exists( 'WC_Integration_Brandbassador_Integration' ) ) :
                  * Extracting data from the order basket
                  * @see fields
                  */
-                // Currency ********** [-_-] **********
-                function brandbassador_currency()
-                {
-                    $brandbassador_currency = '';
-                    if (get_woocommerce_currency()) {
-                        $brandbassador_currency = '&currency=' . get_woocommerce_currency();
-                    }
-                    return $brandbassador_currency;
-                }
+
 
                 // Return pixel Function ********** [-_-] **********
                 function brandbassador_pixel_url()
                 {
+                    // Base url ********** [-_-] **********
+                    function brandbassador_url()
+                    {
+                        $get_site_url = '';
+                        if (get_site_url()) {
+                            $get_site_url = get_site_url();
+                        }
+                        return $get_site_url;
+                    }
+
+                    // Brandbassador_url ********** [-_-] **********
+                    function brandbassador_brandbassador_url()
+                    {
+                        $brandbassador_brandbassador_url = 'https://api.brandbassador.com';
+                        return $brandbassador_brandbassador_url;
+                    }
+
+                    function fields_api_key_back_Checking()
+                    {
+                        $WC_Integration_Brandbassador_Integration = new WC_Integration_Brandbassador_Integration;
+                        $fields_api_key_back_Checking = $WC_Integration_Brandbassador_Integration->{'fields_api_key_back_Checking'}(); // api_key_back
+                        return $fields_api_key_back_Checking;
+                    }
+
+                    // Currency ********** [-_-] **********
+                    function brandbassador_currency()
+                    {
+                        $brandbassador_currency = '';
+                        if (get_woocommerce_currency()) {
+                            $brandbassador_currency = '&currency=' . get_woocommerce_currency();
+                        }
+                        return $brandbassador_currency;
+                    }
+
                     global $woocommerce, $post;
 
                     $order = new WC_Order(order_number_url());
@@ -323,8 +316,7 @@ if ( ! class_exists( 'WC_Integration_Brandbassador_Integration' ) ) :
             }
 
             add_action('init', 'isa_order_received_text');
-        }
-    }
+
 
     add_action( 'admin_footer', 'my_header_scripts' );
 
