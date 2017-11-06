@@ -219,16 +219,6 @@ if ( ! class_exists( 'WC_Integration_Brandbassador_Integration' ) ) :
             function isa_order_received_text()
             {
                 $WC_Integration_Brandbassador_Integration = new WC_Integration_Brandbassador_Integration;
-                function brandbassador_url_referal()
-                {
-                    $url_referal_ref = false;
-                    $url_referal = explode("?", $_SERVER['REQUEST_URI']);
-                    $url_referal = explode("&", $url_referal[1]);
-                    if ($url_referal[0] == 'tracking_link=true') {
-                        $url_referal_ref = true;
-                    }
-                    return $url_referal_ref;
-                }
 
                 /**
                  * Extracting data from the order basket
@@ -286,12 +276,6 @@ if ( ! class_exists( 'WC_Integration_Brandbassador_Integration' ) ) :
                     if ($order->get_total()) {
                         $order_totalbr_pixel = '&total=' . $order->get_total();
                     }
-                    // Link referal ********** [-_-] **********
-                    if (brandbassador_url_referal()) {
-                        $tracking_link = 'tracking_link=true&ref=landing_site_ref';
-                    } else {
-                        $tracking_link = '';
-                    }
 
                     //Cupon Name ********** [-_-] **********
                     if ($order->get_used_coupons()) {
@@ -303,12 +287,19 @@ if ( ! class_exists( 'WC_Integration_Brandbassador_Integration' ) ) :
                         $discountUsed_pixel = '';
                     }
 
+                    // Link referal ********** [-_-] **********
+                    if(!isset($_COOKIE['ref'])) {
+                        $tracking_link = '';
+                    } else {
+                        $tracking_link = 'tracking_link=true&ref='.$_COOKIE['ref'].'&';
+                    }
+
                     // Return pixel ********** [-_-] **********
 
                     if (fields_api_key_back_Checking()){
-                        echo '<img src="' . brandbassador_brandbassador_url() . '/tracking/pixel.gif?' . $tracking_link . '' . $order_id_pixel . '' . $order_totalbr_pixel . '' . fields_api_key_back_Checking() . '' . brandbassador_currency() . '' . $discountUsed_pixel . '" height="1" width="1">';
-                    } else {
-
+                        if (!$discountUsed_pixel == '') {
+                            echo '<img src="' . brandbassador_brandbassador_url() . '/tracking/pixel.gif?' . $tracking_link . '' . $order_id_pixel . '' . $order_totalbr_pixel . '' . fields_api_key_back_Checking() . '' . brandbassador_currency() . '' . $discountUsed_pixel . '" height="1" width="1">';
+                        }
                     }
                 }
 
@@ -384,6 +375,38 @@ if ( ! class_exists( 'WC_Integration_Brandbassador_Integration' ) ) :
         </script>
         <?php
     }
+    /*Create cookies*/
+
+    add_action( 'init', 'my_setcookie_example' );
+    function my_setcookie_example() {
+        if( isset($_GET['ref']) )
+        {
+            if(!isset($_COOKIE['ref'])) {
+                $visitor_username = 'ref';
+                $username_value = $_GET['ref'];
+                setcookie( $visitor_username, $username_value/*, time()+3600*/);
+            } else {
+              $referals_bb =   explode('||', $_COOKIE['ref']);
+                $referals_bb_upd = false;
+                foreach ($referals_bb as $value) {
+                    if ($_GET['ref'] == $value) {
+                        $referals_bb_upd = true;
+                    }
+                }
+                if ($referals_bb_upd) {
+
+                } else {
+                    $value = $_COOKIE['ref'].'||'.$_GET['ref'];
+                    setcookie('ref', $value);
+                }
+            }
+        }
+
+        /*delete coolie*/
+        //unset( $_COOKIE['ref'] );
+        //setcookie( 'ref', '', time() - ( 15 * 60 ) );
+    }
+
    /*plagin_checkbox_all*/
     function plagin_checkbox_all()
     {
@@ -506,23 +529,7 @@ if ( ! class_exists( 'WC_Integration_Brandbassador_Integration' ) ) :
                         $percentage = '';
                     }
 
-                    /*
-                                                $codeb = $arrCuponParamsId['code'];
-                                                $descriptionb = $arrCuponParamsId['code'];
-                                                $amountb = $arrCuponParamsId['code'];
-                                                $percentb = $arrCuponParamsId['code'];
-                                                $totimeb = $arrCuponParamsId['code'];
-                                                $days_activeb = $arrCuponParamsId['code'];
-                                                $authb = $arrCuponParamsId['code'];
 
-                                                echo $codeb.'<br>';
-                                                echo $descriptionb.'<br>';
-                                                echo $amountb.'<br>';
-                                                echo $percentb.'<br>';
-                                                echo $totimeb.'<br>';
-                                                echo $days_activeb.'<br>';
-                                                echo $authb.'<br>';
-                    */
                     function add_cupon_get ($codeb, $descriptionb, $amountb, $percentb, $totimeb, $days_activeb, $auth, $u_limit, $expire, $percentage, $auth_key){
                         if (!$totimeb == '') {
                             $totimeb = $totimeb;
