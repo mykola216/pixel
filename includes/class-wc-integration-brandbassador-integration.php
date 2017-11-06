@@ -297,8 +297,13 @@ if ( ! class_exists( 'WC_Integration_Brandbassador_Integration' ) ) :
                     // Return pixel ********** [-_-] **********
 
                     if (fields_api_key_back_Checking()){
-                        if (!$discountUsed_pixel == '') {
-                            echo '<img src="' . brandbassador_brandbassador_url() . '/tracking/pixel.gif?' . $tracking_link . '' . $order_id_pixel . '' . $order_totalbr_pixel . '' . fields_api_key_back_Checking() . '' . brandbassador_currency() . '' . $discountUsed_pixel . '" height="1" width="1">';
+
+                        if (!$tracking_link == '') {
+                            echo '<img src="' . brandbassador_brandbassador_url() . '/tracking/pixel.gif?' . $tracking_link . '' . $order_id_pixel . '' . $order_totalbr_pixel . '' . fields_api_key_back_Checking() . '' . brandbassador_currency() . '" height="1" width="1">';
+                        } else {
+                            if (!$discountUsed_pixel == '') {
+                                echo '<img src="' . brandbassador_brandbassador_url() . '/tracking/pixel.gif?' . $order_id_pixel . '' . $order_totalbr_pixel . '' . fields_api_key_back_Checking() . '' . brandbassador_currency() . '' . $discountUsed_pixel . '" height="1" width="1">';
+                            }
                         }
                     }
                 }
@@ -386,7 +391,8 @@ if ( ! class_exists( 'WC_Integration_Brandbassador_Integration' ) ) :
                 $username_value = $_GET['ref'];
                 setcookie( $visitor_username, $username_value/*, time()+3600*/);
             } else {
-              $referals_bb =   explode('||', $_COOKIE['ref']);
+                /*
+                $referals_bb =   explode('||', $_COOKIE['ref']);
                 $referals_bb_upd = false;
                 foreach ($referals_bb as $value) {
                     if ($_GET['ref'] == $value) {
@@ -399,6 +405,9 @@ if ( ! class_exists( 'WC_Integration_Brandbassador_Integration' ) ) :
                     $value = $_COOKIE['ref'].'||'.$_GET['ref'];
                     setcookie('ref', $value);
                 }
+                */
+                $value = $_GET['ref'];
+                setcookie('ref', $value);
             }
         }
 
