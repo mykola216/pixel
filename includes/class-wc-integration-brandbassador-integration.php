@@ -636,6 +636,7 @@ if ( ! class_exists( 'WC_Integration_Brandbassador_Integration' ) ) :
                         update_post_meta ($new_coupon_id, 'apply_before_tax', 'yes');
                         update_post_meta ($new_coupon_id, 'free_shipping', 'no');
                         update_post_meta ($new_coupon_id, 'coupon_authorkey', $auth_key);
+                        update_post_meta ($new_coupon_id, 'individual_use', 'yes');
                         if ($plaginis){
                             update_post_meta ($new_coupon_id, 'zone_pricing_type', 'exchange_rate');
                         }
