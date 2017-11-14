@@ -569,6 +569,11 @@ if ( ! class_exists( 'WC_Integration_Brandbassador_Integration' ) ) :
                         if (!$amountb=='') {
                             $amountb = $amountb;
                             $discount_type = 'fixed_cart';
+                            /*
+                            // Error add cupon amountb
+                            echo '{"error": "giftcards deactivated"}';
+                            exit();
+                            */
                         }
                         if (!$percentb=='') {
                             $amountb = $percentb;
