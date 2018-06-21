@@ -1,9 +1,9 @@
 <?php
 /**
- * Integration Brandbassador Integration.
+ * Integration Pixel-master Integration.
  *
  * @package  WC_Integration_Brandbassador_Integration
- * @category Brandbassador
+ * @category Pixel-master
  * @author   WooThemes
  */
 
@@ -19,8 +19,8 @@ if ( ! class_exists( 'WC_Integration_Brandbassador_Integration' ) ) :
             global $woocommerce;
 
             $this->id                 = 'integration-brandbassador';
-            $this->method_title       = __( 'Brandbassador', 'woocommerce-integration-brandbassador' );
-            $this->method_description = __( 'Integratino Brandbassador in WooCommerce.', 'woocommerce-integration-brandbassador' );
+            $this->method_title       = __( 'Pixel-master', 'woocommerce-integration-brandbassador' );
+            $this->method_description = __( 'Integratino Pixel-master in WooCommerce.', 'woocommerce-integration-brandbassador' );
 
             // Load the settings.
             $this->init_form_fields();
@@ -35,6 +35,11 @@ if ( ! class_exists( 'WC_Integration_Brandbassador_Integration' ) ) :
 
             // Filters.
             add_filter( 'woocommerce_settings_api_sanitized_fields_' . $this->id, array( $this, 'sanitize_settings' ) );
+            add_action( 'woocommerce_update_options', array($this,'options_init_value') );
+            add_action( 'init', array($this,'options_init_value_validate') );
+
+
+
         }
         /**
          * Initialize integration settings form fields.
@@ -55,7 +60,8 @@ if ( ! class_exists( 'WC_Integration_Brandbassador_Integration' ) ) :
                     'type'              => 'text',
                     'description'       => __( 'API Key Brandbassador', 'woocommerce-integration-brandbassador' ),
                     'desc_tip'          => true,
-                    'default'           => ''
+                    'default'           => '',
+                    'readonly'          => 'readonly'
 
                 ),
             );
@@ -64,8 +70,11 @@ if ( ! class_exists( 'WC_Integration_Brandbassador_Integration' ) ) :
 
         /**
          * Generate Button HTML.
+         *
          */
+
         public function generate_button_html( $key, $data ) {
+
             $field    = $this->plugin_id . $this->id . '_' . $key;
             $defaults = array(
                 'class'             => 'button-secondary brandbassadorinit',
@@ -97,36 +106,102 @@ if ( ! class_exists( 'WC_Integration_Brandbassador_Integration' ) ) :
             return ob_get_clean();
         }
         /**
+         * settings api_key_back value
+         * @see error()
+         */
+
+        /**
          * Santize our settings
          * @see process_admin_options()
          */
-        public function sanitize_settings( $settings ) {
-            // We're just going to make the api key all upper case characters since that's how our imaginary API works
-            if ( isset( $settings ) && isset( $settings['api_key'] ) ) {
-                //$settings['api_key'] = strtoupper( $settings['api_key'] );
-                $api_key =  $settings['api_key'];
-            }
-            return $settings;
 
+        public function sanitize_settings( $settings ) {
+            return $settings;
         }
 
-
+        function br_plugin_notice() {
+            ?>
+            <div class="notice notice-success is-dismissible">
+                <p>"Настройки обновлены!"</p>
+            </div>
+            <?php
+        }
         /**
          * Validate the API key
          * @see validate_settings_fields()
          */
-        /*public function validate_api_key_field( $key ) {
-            // get the posted value
-            $value = $_POST[ $this->plugin_id . $this->id . '_' . $key ];
-
-            // check if the API key is longer than 20 characters. Our imaginary API doesn't create keys that large so something must be wrong. Throw an error which will prevent the user from saving.
-            if ( isset( $value ) && 20 < strlen( $value ) ) {
-                $this->errors[] = $key;
+        public function validate_api_key_field ($key, $value) {
+            if ($value == '') {
+                // WC_Admin_Settings :: add_error (esc_html__ ( 'No data in the field - API Key', 'WooCommerce-br'));
             }
             return $value;
-        }*/
+        }
+        public function validate_api_key_back_field ($key, $value) {
+            $api_key = $this->get_option( 'api_key' );
+            $get_url_this = get_site_url();
+
+            if (!$api_key == '') {
+                $post_array = "";
+                $array_body = array();
+                $array_body['body'] = $post_array;
+                $url = 'https://api.brandbassador.com/admin/brands/registerWebshopPlugin?authKey='.$api_key.'&api='.$get_url_this.'index.php/brandbassador/discountCodeCreate';
+                $response = wp_remote_post( $url, $array_body );
+                //var_dump($response);
+                if ( is_wp_error( $response ) ) {
+                    $error_message = $response->get_error_message();
+                    echo "Что-то пошло не так: $error_message";
+                } else {
+                    if ($response['response']['code'] == '200') {
+                        $value = $response["body"];
+                    }
+                }
+            }
+            if ($api_key == '') {
+                $value = '';
+            }
+            if ($value == '') {
+                //WC_Admin_Settings :: add_error (esc_html__ ( 'No data in the field - API Key Brandbassador', 'WooCommerce-br'));
+            }
+            return $value;
+
+            ///var_dump($value);
+        }
 
 
+        public function options_init_value() {
+
+            if ($this->get_option( 'api_key' ) == '') {
+                WC_Admin_Settings :: add_error (esc_html__ ( 'API Key ERROR', 'WooCommerce-br'));
+            }
+            if($this->get_option('api_key_back') == '' ) {
+
+                WC_Admin_Settings :: add_error (esc_html__ ( 'API Key Brandbassador ERROR', 'WooCommerce-br'));
+            }
+        }
+        public function options_init_value_validate() {
+            /*   if ($this->get_option( 'api_key' ) == '') {
+                   WC_Admin_Settings :: add_error (esc_html__ ( 'API Key NONE', 'WooCommerce-br'));
+               }
+               if($this->get_option('api_key_back') == '' ) {
+
+                   WC_Admin_Settings :: add_error (esc_html__ ( 'API Key Brandbassador NONE', 'WooCommerce-br'));
+               }
+            */
+        }
+
+        /*
+                public function validate_api_key_field( $key ) {
+                    // get the posted value
+                    $value = $_POST[ $this->plugin_id . $this->id . '_' . $key ];
+
+                    // check if the API key is longer than 20 characters. Our imaginary API doesn't create keys that large so something must be wrong. Throw an error which will prevent the user from saving.
+                    if ( isset( $value ) && 20 < strlen( $value ) ) {
+                        $this->errors[] = $key;
+                    }
+                    return $value;
+                }
+
+        */
         /**
          * Display errors by overriding the display_errors() method
          * @see display_errors()
@@ -166,36 +241,54 @@ if ( ! class_exists( 'WC_Integration_Brandbassador_Integration' ) ) :
 
     /*****************************************************/
 
+    /*
 
-
-    function add_coupon_revenue_coupon_authorkey() {
-        woocommerce_wp_text_input(array('id' => 'coupon_authorkey', 'readonly' => '', 'label' => __('Auth key', 'woocommerce'), 'placeholder' => __('None', 'woocommerce'), 'description' => __('Auth key', 'woocommerce')));
-    }
-    add_action( 'woocommerce_coupon_options', 'add_coupon_revenue_coupon_authorkey', 10, 0 );
-
-    function save_coupon_revenue_coupon_authorkey( $post_id ) {
-        $coupon_authorkey = $_POST['coupon_authorkey'];
-        if ( isset($coupon_authorkey)) {
-            update_post_meta( $post_id, 'coupon_authorkey', stripslashes( $coupon_authorkey ) );
+        function add_coupon_revenue_coupon_authorkey() {
+            woocommerce_wp_text_input(array('id' => 'coupon_authorkey', 'readonly' => '', 'label' => __('Auth key', 'woocommerce'), 'placeholder' => __('None', 'woocommerce'), 'description' => __('Auth key', 'woocommerce')));
         }
-    }
-    add_action( 'woocommerce_coupon_options_save', 'save_coupon_revenue_coupon_authorkey');
+        add_action( 'woocommerce_coupon_options', 'add_coupon_revenue_coupon_authorkey', 10, 0 );
 
+        function save_coupon_revenue_coupon_authorkey( $post_id ) {
+            $coupon_authorkey = $_POST['coupon_authorkey'];
+            if ( isset($coupon_authorkey)) {
+                update_post_meta( $post_id, 'coupon_authorkey', stripslashes( $coupon_authorkey ) );
+            }
+        }
+        add_action( 'woocommerce_coupon_options_save', 'save_coupon_revenue_coupon_authorkey');
+    */
+    add_action( 'admin_footer', 'my_futer_scripts' );
+    function my_futer_scripts()
+    {?>
+        <script type="text/javascript">
+            jQuery(document).ready(function() {
+                if(jQuery('#woocommerce_integration-brandbassador_api_key_back')){
+                    //jQuery('#woocommerce_integration-brandbassador_api_key_back').prop( "disabled", true );
+                }
+            });
+        </script>
+
+        <?php
+    }
     /**
-     * Url for brandbassador page
+     * Brandbassador version
      * @see page
      */
+//var_dump($_SERVER["REQUEST_URI"]);
     function plagi_WooCommerce_Brandbassador_version() {
-        if($_SERVER["REQUEST_URI"] == '/brandbassador/discountCodeCreate') {
+        if($_SERVER["REQUEST_URI"] == '/index.php/brandbassador/discountCodeCreate' || $_SERVER["REQUEST_URI"] == 'index.php/brandbassador/discountCodeCreate' || $_SERVER["REQUEST_URI"] == '/brandbassador/discountCodeCreate' || $_SERVER["REQUEST_URI"] == 'brandbassador/discountCodeCreate') {
             if ( ! function_exists( 'get_plugins' ) ) {
                 require_once ABSPATH . 'wp-admin/includes/plugin.php';
             }
             $all_plugins = get_plugins();
+
+            //var_dump($all_plugins);
+
             error_log( print_r($all_plugins, true ));
-            echo '{"name":"'.$all_plugins['woocommerce-integration-brandbassador-master/woocommerce-integration-brandbassador.php']['Name'].'","version":"'.$all_plugins['woocommerce-integration-brandbassador-master/woocommerce-integration-brandbassador.php']['Version'].'"}';
+            echo '{"name":"'.$all_plugins['pixel-master/woocommerce-integration-brandbassador.php']['Name'].'","version":"'.$all_plugins['pixel-master/woocommerce-integration-brandbassador.php']['Version'].'"}';
             exit;
         }
     }
+
     add_action('init', 'plagi_WooCommerce_Brandbassador_version');
 
     /**
@@ -207,179 +300,202 @@ if ( ! class_exists( 'WC_Integration_Brandbassador_Integration' ) ) :
         global $wp;
         return $wp->query_vars['order-received'];
     }
-            /**
-             * Extracting field data, writing in variables
-             * @see fields
-             */
-            $WC_Integration_Brandbassador_Integration = new WC_Integration_Brandbassador_Integration;
+    /**
+     * Extracting field data, writing in variables
+     * @see fields
+     */
+    //$WC_Integration_Brandbassador_Integration = new WC_Integration_Brandbassador_Integration;
 
-            $fields_api_key_Checking = $WC_Integration_Brandbassador_Integration->{'fields_api_key_Checking'}(); // api_key
-            $fields_api_key_back_Checking = $WC_Integration_Brandbassador_Integration->{'fields_api_key_back_Checking'}(); // api_key_back
+    //$fields_api_key_Checking = $WC_Integration_Brandbassador_Integration->{'fields_api_key_Checking'}(); // api_key
+    //$fields_api_key_back_Checking = $WC_Integration_Brandbassador_Integration->{'fields_api_key_back_Checking'}(); // api_key_back
 
-            function isa_order_received_text()
-            {
-                $WC_Integration_Brandbassador_Integration = new WC_Integration_Brandbassador_Integration;
+    // function isa_order_received_text()
+    // {
+    //$WC_Integration_Brandbassador_Integration = new WC_Integration_Brandbassador_Integration;
 
-                /**
-                 * Extracting data from the order basket
-                 * @see fields
-                 */
+    /**
+     * Extracting data from the order basket
+     * @see fields
+     */
 
 
-                // Return pixel Function ********** [-_-] **********
-                function brandbassador_pixel_url()
-                {
-                    // Base url ********** [-_-] **********
-                    function brandbassador_url()
-                    {
-                        $get_site_url = '';
-                        if (get_site_url()) {
-                            $get_site_url = get_site_url();
-                        }
-                        return $get_site_url;
-                    }
-
-                    // Brandbassador_url ********** [-_-] **********
-                    function brandbassador_brandbassador_url()
-                    {
-                        $brandbassador_brandbassador_url = 'https://api.brandbassador.com';
-                        return $brandbassador_brandbassador_url;
-                    }
-
-                    function fields_api_key_back_Checking()
-                    {
-                        $WC_Integration_Brandbassador_Integration = new WC_Integration_Brandbassador_Integration;
-                        $fields_api_key_back_Checking = $WC_Integration_Brandbassador_Integration->{'fields_api_key_back_Checking'}(); // api_key_back
-                        return $fields_api_key_back_Checking;
-                    }
-
-                    // Currency ********** [-_-] **********
-                    function brandbassador_currency()
-                    {
-                        $brandbassador_currency = '';
-                        if (get_woocommerce_currency()) {
-                            $brandbassador_currency = '&currency=' . get_woocommerce_currency();
-                        }
-                        return $brandbassador_currency;
-                    }
-
-                    global $woocommerce, $post;
-
-                    $order = new WC_Order(order_number_url());
-
-                    // ORDER ID ********** [-_-] **********
-                    if (order_number_url()) {
-                        $order_id_pixel = 'order_id=' . order_number_url();
-                    }
-
-                    // Total ********** [-_-] **********
-                    if ($order->get_total()) {
-                        $order_totalbr_pixel = '&total=' . $order->get_total();
-                    }
-
-                    //Cupon Name ********** [-_-] **********
-                    if ($order->get_used_coupons()) {
-                        foreach ($order->get_used_coupons() as $coupon) {
-                            $discountUsed_pixel = '&code=' . mb_strtoupper($coupon);
-                        }
-
-                    } else {
-                        $discountUsed_pixel = '';
-                    }
-
-                    // Link referal ********** [-_-] **********
-                    if(!isset($_COOKIE['ref'])) {
-                        $tracking_link = '';
-                    } else {
-                        $tracking_link = 'tracking_link=true&ref='.$_COOKIE['ref'].'&';
-                    }
-
-                    // Return pixel ********** [-_-] **********
-
-                    if (fields_api_key_back_Checking()){
-
-                        if (!$tracking_link == '') {
-                            echo '<img src="' . brandbassador_brandbassador_url() . '/tracking/pixel.gif?' . $tracking_link . '' . $order_id_pixel . '' . $order_totalbr_pixel . '' . fields_api_key_back_Checking() . '' . brandbassador_currency() . '" height="1" width="1">';
-                        } else {
-                            if (!$discountUsed_pixel == '') {
-                                echo '<img src="' . brandbassador_brandbassador_url() . '/tracking/pixel.gif?' . $order_id_pixel . '' . $order_totalbr_pixel . '' . fields_api_key_back_Checking() . '' . brandbassador_currency() . '' . $discountUsed_pixel . '" height="1" width="1">';
-                            }
-                        }
-                    }
-                }
-
-                add_action('woocommerce_thankyou', 'brandbassador_pixel_url');
+    // Return pixel Function ********** [-_-] **********
+    function brandbassador_pixel_url($order_id) {
+        // Base url ********** [-_-] **********
+        //var_dump($order_id);
+        function brandbassador_url()
+        {
+            $get_site_url = '';
+            if (get_site_url()) {
+                $get_site_url = get_site_url();
             }
-
-            add_action('init', 'isa_order_received_text');
-
-
-    add_action( 'admin_footer', 'my_header_scripts' );
-
-
-    function my_header_scripts() {
-        $get_site_url = '';
-        if (get_site_url()) {
-            $get_site_url = get_site_url();
+            return $get_site_url;
         }
-        $brandbassador_brandbassador_url = 'https://api.brandbassador.com';
-        ?>
-        <script type="text/javascript">
-            jQuery( document ).ready(function() {
-                if ( jQuery(".form-table input").is("#woocommerce_integration-brandbassador_api_key") ) {
-                    var get_site_url = '<?php  echo $get_site_url ?>'+"/brandbassador/discountCodeCreate";
-                    var brandbassador_brandbassador_url = '<?php  echo $brandbassador_brandbassador_url ?>';
-                    var fields_api_key_Checking = jQuery("input#woocommerce_integration-brandbassador_api_key").val();
 
-                    ajax_get_key (get_site_url, fields_api_key_Checking, brandbassador_brandbassador_url);
-                }
-                if ( jQuery("#coupon_options .coupon_authorkey_field input").is("#coupon_authorkey") ) {
-                    jQuery("input#coupon_authorkey").prop("readonly",true);
-                }
+        // Brandbassador_url ********** [-_-] **********
+        function brandbassador_brandbassador_url()
+        {
+            $brandbassador_brandbassador_url = 'https://api.brandbassador.com';
+            return $brandbassador_brandbassador_url;
+        }
 
-            });
+        function fields_api_key_back_Checking()
+        {
+            $WC_Integration_Brandbassador_Integration = new WC_Integration_Brandbassador_Integration;
+            $fields_api_key_back_Checking = $WC_Integration_Brandbassador_Integration->{'fields_api_key_back_Checking'}(); // api_key_back
+            return $fields_api_key_back_Checking;
+        }
 
-            /**
-             * Get the key with https://api.brandbassador.com
-             * @see key
-             */
-            function ajax_get_key (api, authKey, brandbassador_brandbassador_url) {
-                jQuery.ajax({
-                    type: "GET",
-                    url: 'https://api.brandbassador.com/admin/brands/registerWebshopPlugin?authKey='+authKey+'&api='+api+'',
-                    success: function(data, textStatus, jqXHR)
-                    {
-                        if (jQuery("input#woocommerce_integration-brandbassador_api_key_back").val() == '') {
-                            jQuery("input#woocommerce_integration-brandbassador_api_key").css('background','#00e64d');
-                            jQuery("input#woocommerce_integration-brandbassador_api_key_back").val(data);
-                            jQuery(".button-primary.woocommerce-save-button").click();
-
-                        } else {
-                            if (jQuery("input#woocommerce_integration-brandbassador_api_key_back").val() == data) {
-                                jQuery("input#woocommerce_integration-brandbassador_api_key").css('background','#00e64d');
-                            } else {
-                                jQuery("input#woocommerce_integration-brandbassador_api_key").css('background','#00e64d');
-                                jQuery("input#woocommerce_integration-brandbassador_api_key_back").val(data);
-                                jQuery(".button-primary.woocommerce-save-button").click();
-                            }
-                        }
-                    },
-                    error: function (jqXHR, textStatus, errorThrown)
-                    {
-                        if (jQuery("input#woocommerce_integration-brandbassador_api_key_back").val() == '') {
-                            jQuery("input#woocommerce_integration-brandbassador_api_key").css('background','#ff9999');
-                        } else {
-                            jQuery("input#woocommerce_integration-brandbassador_api_key").css('background','#ff9999');
-                            jQuery("input#woocommerce_integration-brandbassador_api_key_back").val('');
-                            jQuery(".button-primary.woocommerce-save-button").click();
-                        }
-                    }
-                });
-                jQuery("input#woocommerce_integration-brandbassador_api_key_back").prop("readonly",true);
+        // Currency ********** [-_-] **********
+        function brandbassador_currency()
+        {
+            $brandbassador_currency = '';
+            if (get_woocommerce_currency()) {
+                $brandbassador_currency = '&currency=' . get_woocommerce_currency();
             }
-        </script>
-        <?php
+            return $brandbassador_currency;
+        }
+
+        global $woocommerce, $post;
+
+        $order = new WC_Order(order_number_url());
+
+        //var_dump($order);
+
+        // ORDER ID ********** [-_-] **********
+        if (order_number_url()) {
+            $order_id_pixel = 'order_id=' . order_number_url();
+        }
+
+        // Total ********** [-_-] **********
+        if ($order->get_total()) {
+            $order_totalbr_pixel = '&total=' . $order->get_total();
+        }
+
+        //Cupon Name ********** [-_-] **********
+        if ($order->get_used_coupons()) {
+            foreach ($order->get_used_coupons() as $coupon) {
+                $discountUsed_pixel = '&code=' . mb_strtoupper($coupon);
+            }
+
+        } else {
+            $discountUsed_pixel = '';
+        }
+
+        // Link referal ********** [-_-] **********
+        if(!isset($_COOKIE['ref'])) {
+            $tracking_link = '';
+        } else {
+            $tracking_link = 'tracking_link=true&ref='.$_COOKIE['ref'].'&';
+        }
+
+        // Return pixel ********** [-_-] **********
+
+        if (fields_api_key_back_Checking()){
+
+            if (!$tracking_link == '') {
+                echo '<img src="' . brandbassador_brandbassador_url() . '/tracking/pixel.gif?' . $tracking_link . '' . $order_id_pixel . '' . $order_totalbr_pixel . '' . fields_api_key_back_Checking() . '' . brandbassador_currency() . '" height="1" width="1">';
+            } else {
+                if (!$discountUsed_pixel == '') {
+                    echo '<img src="' . brandbassador_brandbassador_url() . '/tracking/pixel.gif?' . $order_id_pixel . '' . $order_totalbr_pixel . '' . fields_api_key_back_Checking() . '' . brandbassador_currency() . '' . $discountUsed_pixel . '" height="1" width="1">';
+                }
+            }
+        }
     }
+
+    //add_action('woocommerce_thankyou', 'brandbassador_pixel_url');
+
+    add_filter( 'woocommerce_thankyou_order_received_text', 'wpb_thankyou', 10, 2 );
+    function wpb_thankyou( $thankyoutext, $order ) {
+
+        function brandbassador_url()
+        {
+            $get_site_url = '';
+            if (get_site_url()) {
+                $get_site_url = get_site_url();
+            }
+            return $get_site_url;
+        }
+
+        // Brandbassador_url ********** [-_-] **********
+        function brandbassador_brandbassador_url()
+        {
+            $brandbassador_brandbassador_url = 'https://api.brandbassador.com';
+            return $brandbassador_brandbassador_url;
+        }
+
+        function fields_api_key_back_Checking()
+        {
+            $WC_Integration_Brandbassador_Integration = new WC_Integration_Brandbassador_Integration;
+            $fields_api_key_back_Checking = $WC_Integration_Brandbassador_Integration->{'fields_api_key_back_Checking'}(); // api_key_back
+            return $fields_api_key_back_Checking;
+        }
+
+        // Currency ********** [-_-] **********
+        function brandbassador_currency()
+        {
+            $brandbassador_currency = '';
+            if (get_woocommerce_currency()) {
+                $brandbassador_currency = '&currency=' . get_woocommerce_currency();
+            }
+            return $brandbassador_currency;
+        }
+
+        global $woocommerce, $post;
+
+        $order = new WC_Order(order_number_url());
+
+        // ORDER ID ********** [-_-] **********
+        if (order_number_url()) {
+            $order_id_pixel = 'order_id=' . order_number_url();
+        }
+
+        // Total ********** [-_-] **********
+        if ($order->get_total()) {
+            $order_totalbr_pixel = '&total=' . $order->get_total();
+        }
+
+        //Cupon Name ********** [-_-] **********
+        if ($order->get_used_coupons()) {
+            foreach ($order->get_used_coupons() as $coupon) {
+                $discountUsed_pixel = '&code=' . mb_strtoupper($coupon);
+            }
+
+        } else {
+            $discountUsed_pixel = '';
+        }
+
+        // Link referal ********** [-_-] **********
+        if(!isset($_COOKIE['ref'])) {
+            $tracking_link = '';
+        } else {
+            $tracking_link = 'tracking_link=true&ref='.$_COOKIE['ref'].'&';
+        }
+
+        // Return pixel ********** [-_-] **********
+
+        if (fields_api_key_back_Checking()){
+
+            if (!$tracking_link == '') {
+                $pixel_img =  '<img src="' . brandbassador_brandbassador_url() . '/tracking/pixel.gif?' . $tracking_link . '' . $order_id_pixel . '' . $order_totalbr_pixel . '' . fields_api_key_back_Checking() . '' . brandbassador_currency() . '" height="1" width="1">';
+            } else {
+                if (!$discountUsed_pixel == '') {
+                    $pixel_img =  '<img src="' . brandbassador_brandbassador_url() . '/tracking/pixel.gif?' . $order_id_pixel . '' . $order_totalbr_pixel . '' . fields_api_key_back_Checking() . '' . brandbassador_currency() . '' . $discountUsed_pixel . '" height="1" width="1">';
+                }
+            }
+        }
+
+        $added_text = $thankyoutext . $pixel_img;
+        return $added_text ;
+    }
+
+
+
+    // }
+
+    // add_action('init', 'isa_order_received_text');
+
+
     /*Create cookies*/
 
     add_action( 'init', 'my_setcookie_example' );
@@ -391,32 +507,14 @@ if ( ! class_exists( 'WC_Integration_Brandbassador_Integration' ) ) :
                 $username_value = $_GET['ref'];
                 setcookie( $visitor_username, $username_value/*, time()+3600*/);
             } else {
-                /*
-                $referals_bb =   explode('||', $_COOKIE['ref']);
-                $referals_bb_upd = false;
-                foreach ($referals_bb as $value) {
-                    if ($_GET['ref'] == $value) {
-                        $referals_bb_upd = true;
-                    }
-                }
-                if ($referals_bb_upd) {
 
-                } else {
-                    $value = $_COOKIE['ref'].'||'.$_GET['ref'];
-                    setcookie('ref', $value);
-                }
-                */
                 $value = $_GET['ref'];
                 setcookie('ref', $value);
             }
         }
-
-        /*delete coolie*/
-        //unset( $_COOKIE['ref'] );
-        //setcookie( 'ref', '', time() - ( 15 * 60 ) );
     }
 
-   /*plagin_checkbox_all*/
+    /*plagin_checkbox_all*/
     function plagin_checkbox_all()
     {
         $coupons = get_posts( array(
@@ -445,27 +543,31 @@ if ( ! class_exists( 'WC_Integration_Brandbassador_Integration' ) ) :
      * Cupon
      * @see page
      */
-    add_action('parse_request', 'plagi_WooCommerce_Brandbassador_Cupon');
+    add_action('init', 'plagi_WooCommerce_Brandbassador_Cupon');
 
     function plagi_WooCommerce_Brandbassador_Cupon() {
         $url_page_cupon = explode("?", $_SERVER['REQUEST_URI']);
         if (is_array($url_page_cupon)) {
-            if($url_page_cupon[0] == '/brandbassador/discountCodeCreate') {
+            if($url_page_cupon[0] == '/brandbassador/discountCodeCreate' || $url_page_cupon[0] == 'index.php/brandbassador/discountCodeCreate' ) {
                 if (isset ($url_page_cupon[1])){
                     $url_page_cupon_params = explode("&", urldecode($url_page_cupon[1]));
+
                     foreach ($url_page_cupon_params as $value){
                         $cupon_params = explode("=", $value);
                         if (isset ($cupon_params[1])) {
                             $arrCuponParamsId[$cupon_params[0]] = $cupon_params[1];
+
                         } else {
                             status_header( 404 );
                             nocache_headers();
                             include( get_query_template( '404' ) );
-                            die();
-                            /* echo '{"status":"error","details":"Code already used"}';
-                             exit;*/
+                            //die();
+                            echo '{"status":"error","details":"Code already used"}';
+                            exit;
+
                         }
                     }
+
                     $code = '';
                     $description = '';
                     $amount = '';
@@ -537,8 +639,6 @@ if ( ! class_exists( 'WC_Integration_Brandbassador_Integration' ) ) :
                     } else {
                         $percentage = '';
                     }
-
-
                     function add_cupon_get ($codeb, $descriptionb, $amountb, $percentb, $totimeb, $days_activeb, $auth, $u_limit, $expire, $percentage, $auth_key){
                         if (!$totimeb == '') {
                             $totimeb = $totimeb;
@@ -599,7 +699,14 @@ if ( ! class_exists( 'WC_Integration_Brandbassador_Integration' ) ) :
                             echo '{"status":"error","details":"auth_key"}';
                             exit();
                         }
+                        $WC_Integration_Brandbassador_Integration = new WC_Integration_Brandbassador_Integration;
+                        $api_key_back_value = $WC_Integration_Brandbassador_Integration->{'api_key'};
+                        if ($auth_key == $api_key_back_value) {
 
+                        } else {
+                            echo '{"status":"error","details":"auth_key_none_correct"}';
+                            exit();
+                        }
                         $coupons = get_posts( array(
                             'posts_per_page'   => -1,
                             'post_type'        => 'shop_coupon',
@@ -607,18 +714,22 @@ if ( ! class_exists( 'WC_Integration_Brandbassador_Integration' ) ) :
                         ) );
 
                         foreach ( $coupons as $coupon ){
-                            if ($coupon->post_title == $coupon_code) {
+                            if (strtoupper($coupon->post_title) == strtoupper($coupon_code)) {
                                 echo '{"status":"error","details":"Code already used"}';
                                 exit();
                             }
                         }
 
                         $plaginis = false;
-                        if ( is_plugin_active( 'woocommerce-product-price-based-on-countries/woocommerce-product-price-based-on-countries.php' ) ) {
-                            if ($discount_type == 'fixed_cart') {
-                                $plaginis = true;
-                            }
-                        }
+                        /*
+                        require_once( ABSPATH . 'wp-admin/includes/plugin.php' );
+                         if ( is_plugin_active( 'woocommerce-product-price-based-on-countries/woocommerce-product-price-based-on-countries.php' ) ) {
+                             if ($discount_type == 'fixed_cart') {
+                                 $plaginis = true;
+                             }
+                         }
+                        */
+
 
                         $coupon = array (
                             'post_title' => $coupon_code,
@@ -630,6 +741,7 @@ if ( ! class_exists( 'WC_Integration_Brandbassador_Integration' ) ) :
                         );
 
                         $new_coupon_id = wp_insert_post ($coupon);
+
                         // add meta
                         update_post_meta ($new_coupon_id, 'discount_type', $discount_type);
                         update_post_meta ($new_coupon_id, 'coupon_amount', $amountb);
@@ -642,6 +754,7 @@ if ( ! class_exists( 'WC_Integration_Brandbassador_Integration' ) ) :
                         update_post_meta ($new_coupon_id, 'free_shipping', 'no');
                         update_post_meta ($new_coupon_id, 'coupon_authorkey', $auth_key);
                         update_post_meta ($new_coupon_id, 'individual_use', 'yes');
+
                         if ($plaginis){
                             update_post_meta ($new_coupon_id, 'zone_pricing_type', 'exchange_rate');
                         }

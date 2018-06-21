@@ -1,11 +1,11 @@
 <?php
 /**
- * Plugin Name: WooCommerce_Brandbassador
+ * Plugin Name: pixel-master
  * Plugin URI: https://www.brandbassador.com/
- * Description: Plugin integration Brandbassador pixel
+ * Description: Plugin integration Pixel-master
  * Author: Brandbassador
  * Author URI: https://www.brandbassador.com/
- * Version: 1.0.0
+ * Version: 2.2.2
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,42 +24,42 @@
 
 if ( ! class_exists( 'WC_Integration_Brandbassador' ) ) :
 
-class WC_Integration_Brandbassador {
+    class WC_Integration_Brandbassador {
 
-	/**
-	* Construct the plugin.
-	*/
-	public function __construct() {
-		add_action( 'plugins_loaded', array( $this, 'init' ) );
-	}
+        /**
+         * Construct the plugin.
+         */
+        public function __construct() {
+            add_action( 'plugins_loaded', array( $this, 'init' ) );
+        }
 
-	/**
-	* Initialize the plugin.
-	*/
-	public function init() {
+        /**
+         * Initialize the plugin.
+         */
+        public function init() {
 
-		// Checks if WooCommerce is installed.
-		if ( class_exists( 'WC_Integration' ) ) {
-			// Include our integration class.
-			include_once 'includes/class-wc-integration-brandbassador-integration.php';
+            // Checks if WooCommerce is installed.
+            if ( class_exists( 'WC_Integration' ) ) {
+                // Include our integration class.
+                include_once 'includes/class-wc-integration-brandbassador-integration.php';
 
-			// Register the integration.
-			add_filter( 'woocommerce_integrations', array( $this, 'add_integration' ) );
-		} else {
-			// throw an admin error if you like
-		}
-	}
+                // Register the integration.
+                add_filter( 'woocommerce_integrations', array( $this, 'add_integration' ) );
+            } else {
+                // throw an admin error if you like
+            }
+        }
 
-	/**
-	 * Add a new integration to WooCommerce.
-	 */
-	public function add_integration( $integrations ) {
-		$integrations[] = 'WC_Integration_Brandbassador_Integration';
-		return $integrations;
-	}
+        /**
+         * Add a new integration to WooCommerce.
+         */
+        public function add_integration( $integrations ) {
+            $integrations[] = 'WC_Integration_Brandbassador_Integration';
+            return $integrations;
+        }
 
-}
+    }
 
-$WC_Integration_Brandbassador = new WC_Integration_Brandbassador( __FILE__ );
+    $WC_Integration_Brandbassador = new WC_Integration_Brandbassador( __FILE__ );
 
 endif;
