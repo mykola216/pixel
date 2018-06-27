@@ -1,8 +1,8 @@
 <?php
 /**
- * Plugin Name: pixel-master
+ * Plugin Name: Brandbassador Plugin
  * Plugin URI: https://www.brandbassador.com/
- * Description: Plugin integration Pixel-master
+ * Description: Plugin integration Brandbassador
  * Author: Brandbassador
  * Author URI: https://www.brandbassador.com/
  * Version: 2.2.2
